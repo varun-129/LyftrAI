@@ -12,7 +12,7 @@ up:
 			LLM_API_KEYS="mock_key_1,mock_key_2" \
 			ALLOWED_ORIGINS="http://localhost:3000,http://localhost:5173" \
 			ENABLE_FAILURE_SIMULATION=true \
-			LLM_MODEL="gemini/gemini-2.0-flash" \
+			LLM_MODEL="gemini/gemini-3.5-flash-lite" \
 			DEFAULT_SYSTEM_PROMPT="You are a helpful assistant." \
 			CACHE_DIR="/tmp/app_cache" \
 			MOCK_LLM=true \

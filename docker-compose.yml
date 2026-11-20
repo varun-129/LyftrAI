@@ -11,6 +11,8 @@ services:
       - DATABASE_URL=sqlite:////data/app.db
       - ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173
       - CACHE_DIR=/data/cache
+      - LLM_MODEL=gemini/gemini-3.5-flash-lite
+      - MOCK_LLM=false
       - PORT=8000
     volumes:
       - app_data:/data

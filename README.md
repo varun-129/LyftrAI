@@ -6,10 +6,10 @@ A full-stack resilient AI chat application featuring automatic API key failover,
 
 ## 1. Live URLs
 
-- **Frontend:** `https://your-frontend-deployment.example.com` *(placeholder)*
-- **Backend API:** `https://your-backend-deployment.example.com` *(placeholder)*
-- **Health Endpoint:** `https://your-backend-deployment.example.com/health` *(placeholder)*
-- **GitHub Repository:** `https://github.com/your-username/llm-chatbot-failover-caching` *(placeholder)*
+- **Frontend:** https://lyftr-ai-eosin.vercel.app
+- **Backend API:** https://llm-chatbot-backend-g1h9.onrender.com
+- **Health Endpoint:** https://llm-chatbot-backend-g1h9.onrender.com/health
+- **GitHub Repository:** https://github.com/varun-129/LyftrAI
 
 ---
 

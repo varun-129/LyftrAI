@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import os
 from functools import lru_cache
-from typing import List
+from typing import List, Optional
 
 from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -27,7 +27,8 @@ class Settings(BaseSettings):
     database_url: str = "sqlite:////data/app.db"
     allowed_origins: str = "http://localhost:5173"
     enable_failure_simulation: bool = False
-    llm_model: str = "gemini/gemini-2.0-flash"
+    llm_model: str = "gemini/gemini-3.5-flash-lite"
+    llm_api_base: Optional[str] = "https://generativelanguage.googleapis.com/v1beta/openai/"
     default_system_prompt: str = "You are a helpful assistant."
     cache_dir: str = "/data/cache"
     mock_llm: bool = False

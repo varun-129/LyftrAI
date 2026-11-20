@@ -6,6 +6,7 @@ from __future__ import annotations
 import json
 import logging
 import time
+import os
 from contextlib import asynccontextmanager
 from typing import Optional
 
@@ -43,6 +44,14 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    cfg = get_settings()
+    if cfg.mock_llm:
+        logger.warning("MOCK_LLM=ON")
+        # Fail loudly if MOCK_LLM=true in production environment without explicit override
+        is_prod = os.environ.get("ENV") == "production" or bool(os.environ.get("RENDER"))
+        allow_mock = os.environ.get("ALLOW_MOCK", "").lower() == "true"
+        if is_prod and not allow_mock:
+            raise RuntimeError("MOCK_LLM=true is not permitted in a production environment without ALLOW_MOCK=true")
     logger.info("Starting up – initialising database …")
     await init_db()
     logger.info("Database ready.")

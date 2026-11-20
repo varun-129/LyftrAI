@@ -35,7 +35,7 @@ def test_env(monkeypatch, tmp_path):
     monkeypatch.setenv("LLM_API_KEYS",               "fake_key_1,fake_key_2")
     monkeypatch.setenv("ALLOWED_ORIGINS",            "http://localhost:5173")
     monkeypatch.setenv("ENABLE_FAILURE_SIMULATION",  "true")
-    monkeypatch.setenv("LLM_MODEL",                  "gemini/gemini-2.0-flash")
+    monkeypatch.setenv("LLM_MODEL",                  "gemini/gemini-3.5-flash")
 
     _reset_singletons()
     yield {"db_file": db_file, "cache_dir": cache_dir, "tmp_path": tmp_path}
@@ -55,7 +55,7 @@ def no_sim_env(monkeypatch, tmp_path):
     monkeypatch.setenv("LLM_API_KEYS",               "fake_key_1,fake_key_2")
     monkeypatch.setenv("ALLOWED_ORIGINS",            "http://localhost:5173")
     monkeypatch.setenv("ENABLE_FAILURE_SIMULATION",  "false")
-    monkeypatch.setenv("LLM_MODEL",                  "gemini/gemini-2.0-flash")
+    monkeypatch.setenv("LLM_MODEL",                  "gemini/gemini-3.5-flash")
 
     _reset_singletons()
     yield {"db_file": db_file, "cache_dir": cache_dir}

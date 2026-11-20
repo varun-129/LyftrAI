@@ -51,8 +51,14 @@ def init_llm_service() -> None:
 
     # Our persistent disk cache (survives restarts)
     cache_dir = settings.cache_dir
-    os.makedirs(cache_dir, exist_ok=True)
-    _disk_cache = diskcache.Cache(cache_dir)
+    try:
+        os.makedirs(cache_dir, exist_ok=True)
+        _disk_cache = diskcache.Cache(cache_dir)
+    except (PermissionError, OSError):
+        fallback_dir = "/tmp/data/cache"
+        os.makedirs(fallback_dir, exist_ok=True)
+        _disk_cache = diskcache.Cache(fallback_dir)
+        logger.warning("Cache dir %s not writable, falling back to %s", cache_dir, fallback_dir)
     logger.info("LLM service initialised. Cache dir: %s", cache_dir)
 
 
@@ -155,6 +161,7 @@ _FAILOVER_TYPES = (
     llm_ex.APIConnectionError,
     llm_ex.Timeout,
     llm_ex.AuthenticationError,
+    llm_ex.BadRequestError,
 )
 
 
@@ -162,7 +169,7 @@ def _is_failover_exc(exc: Exception) -> bool:
     if isinstance(exc, _FAILOVER_TYPES):
         return True
     code = getattr(exc, "status_code", None)
-    if code is not None and (code == 429 or code >= 500):
+    if code is not None and (code in (400, 401, 403, 429) or code >= 500):
         return True
     return False
 
@@ -255,13 +262,24 @@ async def get_completion(
                     continue
                 raise
 
+        # Determine actual model and api_base for the provider call
+        call_model = model
+        call_api_base = getattr(settings, "llm_api_base", None)
+        if call_api_base and (model.startswith("gemini/") or not model.startswith("openai/")):
+            # Route to Google's OpenAI-compatible endpoint using Bearer auth
+            clean_name = model.split("/", 1)[-1]
+            call_model = f"openai/{clean_name}"
+
         # Build call kwargs
         call_kwargs: Dict[str, Any] = {
-            "model": model,
+            "model": call_model,
             "messages": messages,
             "num_retries": 0,
             "timeout": 30,
         }
+        if call_api_base:
+            call_kwargs["api_base"] = call_api_base
+
         if settings.mock_llm:
             call_kwargs["mock_response"] = (
                 f"[MOCK] I am a mock LLM. You said: {messages[-1]['content']}"
@@ -271,17 +289,28 @@ async def get_completion(
 
         try:
             response: ModelResponse = await litellm.acompletion(**call_kwargs)
+        except llm_ex.NotFoundError as exc:
+            # 404 model not found is a CONFIG error: log clearly on server and return 503
+            logger.error("Configuration error: model '%s' not found or no longer available (HTTP 404): %s", model, exc)
+            raise AllProvidersUnavailable(f"Model {model} not found or no longer available.") from exc
         except Exception as exc:
+            status_code = getattr(exc, "status_code", None)
             if _is_failover_exc(exc):
-                logger.warning("Key %s failed: %s", key_id, type(exc).__name__)
+                logger.warning("Key %s failed: status=%s (%s)", key_id, status_code, type(exc).__name__)
                 last_exc = exc
                 fallback_attempts += 1
                 continue
-            # Non-retriable error (e.g. bad request) – bubble up
+            # Non-retriable error – bubble up
             raise
 
-        # Success
         reply_text = response.choices[0].message.content or ""
+        # Empty reply from model -> treat as key failure and fail over
+        if not reply_text.strip():
+            logger.warning("Key %s returned empty reply, failing over", key_id)
+            last_exc = RuntimeError(f"Key {key_id} returned empty reply")
+            fallback_attempts += 1
+            continue
+
         usage = response.usage
         resp_model = response.model or model
 

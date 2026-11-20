@@ -23,18 +23,24 @@ from .config import get_settings
 def _db_path() -> str:
     """Extract the filesystem path from a sqlite:///... URL."""
     url = get_settings().database_url
-    # sqlite:////abs/path  -> /abs/path
-    # sqlite:///rel/path   -> rel/path
     match = re.match(r"sqlite:///(.*)", url, re.IGNORECASE)
     if not match:
         raise ValueError(f"Unsupported DATABASE_URL format: {url!r}")
-    return match.group(1)
+    raw_path = match.group(1)
+    return _ensure_parent(raw_path)
 
 
-def _ensure_parent(path: str) -> None:
+def _ensure_parent(path: str) -> str:
     parent = os.path.dirname(path)
     if parent:
-        os.makedirs(parent, exist_ok=True)
+        try:
+            os.makedirs(parent, exist_ok=True)
+            return path
+        except (PermissionError, OSError):
+            fallback_parent = "/tmp/data"
+            os.makedirs(fallback_parent, exist_ok=True)
+            return os.path.join(fallback_parent, os.path.basename(path))
+    return path
 
 
 # --------------------------------------------------------------------------- #
