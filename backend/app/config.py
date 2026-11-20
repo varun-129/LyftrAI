@@ -25,7 +25,7 @@ class Settings(BaseSettings):
 
     # Other settings
     database_url: str = "sqlite:////data/app.db"
-    allowed_origins: str = "http://localhost:5173"
+    allowed_origins: str = "http://localhost:5173,http://localhost:3000,https://lyftr-ai-eosin.vercel.app"
     enable_failure_simulation: bool = False
     llm_model: str = "gemini/gemini-3.5-flash-lite"
     llm_api_base: Optional[str] = "https://generativelanguage.googleapis.com/v1beta/openai/"
@@ -61,8 +61,8 @@ class Settings(BaseSettings):
         object.__setattr__(self, "_key_pool", raw_keys)
         object.__setattr__(self, "_key_ids", [f"key_{i + 1}" for i in range(len(raw_keys))])
 
-        # Parse allowed origins
-        origins = [o.strip() for o in self.allowed_origins.split(",") if o.strip()]
+        # Parse allowed origins (strip whitespace and any accidental trailing slashes)
+        origins = [o.strip().rstrip("/") for o in self.allowed_origins.split(",") if o.strip()]
         object.__setattr__(self, "_origins_list", origins)
 
         return self
