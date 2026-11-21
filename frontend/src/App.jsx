@@ -224,8 +224,9 @@ export default function App() {
 
                       <span className="meta-label">Latency:</span>
                       <span data-testid="meta-latency" className="meta-val">
-                        {meta.latency_ms} ms
-                      </span>
+                        {meta.latency_ms}
+                      </span>{' '}
+                      ms
                     </div>
 
                     <div className="meta-row token-row">
