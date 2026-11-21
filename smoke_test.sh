@@ -53,7 +53,8 @@ SESS_1="smoke_sess1_${RANDOM_SUFFIX}"
 SESS_2="smoke_sess2_${RANDOM_SUFFIX}"
 SESS_FAILOVER="smoke_fo_${RANDOM_SUFFIX}"
 SESS_503="smoke_503_${RANDOM_SUFFIX}"
-COMMON_MSG="What is the chemical symbol for gold?"
+COMMON_MSG="What is the chemical symbol for gold? (run ${RANDOM_SUFFIX})"
+FAILOVER_MSG="Tell me about failover mechanisms in distributed systems. (run ${RANDOM_SUFFIX})"
 
 # ------------------------------------------------------------------------------
 # 1. Health check
@@ -108,7 +109,7 @@ echo -e "\n${CYAN}4. Testing POST /chat with X-Simulate-Failure: key_1=429...${N
 FO_RES=$(curl -s -w "\n%{http_code}" -X POST "${BASE_URL}/chat" \
   -H "Content-Type: application/json" \
   -H "X-Simulate-Failure: key_1=429" \
-  -d "{\"session_id\":\"${SESS_FAILOVER}\",\"message\":\"Tell me about failover mechanisms.\"}")
+  -d "{\"session_id\":\"${SESS_FAILOVER}\",\"message\":\"${FAILOVER_MSG}\"}")
 FO_CODE=$(echo "$FO_RES" | tail -n 1)
 FO_BODY=$(echo "$FO_RES" | sed '$d')
 
